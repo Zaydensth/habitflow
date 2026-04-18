@@ -82,9 +82,9 @@ button{cursor:pointer;font-family:inherit}
 .modal-field input:focus{border-color:rgba(99,102,241,.3)}
 
 .emoji-picker{display:flex;gap:6px;flex-wrap:wrap}
-.emoji-opt{width:36px;height:36px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg-3);font-size:18px;display:flex;align-items:center;justify-content:center;transition:var(--tr)}
-.emoji-opt:hover{border-color:var(--border-h)}
-.emoji-opt.selected{border-color:var(--accent);background:rgba(99,102,241,.1)}
+.emoji-opt{width:36px;height:36px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg-3);font-size:18px;display:flex;align-items:center;justify-content:center;transition:var(--tr);color:var(--text)}
+.emoji-opt:hover{border-color:var(--border-h);color:#fff}
+.emoji-opt.selected{border-color:var(--accent);background:rgba(99,102,241,.15);color:var(--accent)}
 
 .color-picker{display:flex;gap:6px}
 .color-opt{width:28px;height:28px;border-radius:50%;border:2px solid transparent;transition:var(--tr)}
