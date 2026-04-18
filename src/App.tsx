@@ -1,24 +1,43 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, type ReactNode } from 'react';
 import './index.css';
 
 interface Habit {
-  id: number; name: string; emoji: string; color: string;
+  id: number; name: string; icon: string; color: string;
   streak: number; best: number; completedDays: boolean[];
 }
 
 const DAY_NAMES = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-const EMOJIS = ['💧', '🏃', '📖', '🧘', '💤', '🥗', '💊', '✍️', '🎸', '🧠', '💪', '🌅'];
 const COLORS = ['#6366f1', '#8b5cf6', '#22c55e', '#f59e0b', '#ec4899', '#06b6d4', '#f97316', '#ef4444'];
 
 const today = new Date();
 const todayIdx = (today.getDay() + 6) % 7; // Mon=0
 
+/* SVG Icon Library */
+const s = (d: string) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>;
+
+const ICON_MAP: Record<string, ReactNode> = {
+  droplet: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>,
+  run: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="17" cy="4" r="2"/><path d="M15 21l-3-6-4 2-3 3"/><path d="M10 15l2-5 5-1 3-3"/></svg>,
+  book: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+  brain: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5.4 4 6.5V20h6v-4.5c2-1.1 4-3.5 4-6.5a7 7 0 0 0-7-7z"/><line x1="10" y1="20" x2="10" y2="22"/><line x1="14" y1="20" x2="14" y2="22"/></svg>,
+  salad: s("M3 14h18M5.5 14c0-4.4 2.9-8 6.5-8s6.5 3.6 6.5 8M5 14v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"),
+  moon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
+  pill: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="9" transform="rotate(45 12 12)"/><line x1="5" y1="19" x2="19" y2="5"/></svg>,
+  edit: s("M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"),
+  music: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>,
+  zap: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>,
+  dumbbell: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6.5 6.5h11M6 10V4M18 10V4M4 8h2v4H4zM18 8h2v4h-2zM6.5 17.5h11M6 20v-6M18 20v-6M4 16h2v4H4zM18 16h2v4h-2z"/></svg>,
+  sunrise: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/></svg>,
+};
+
+const ICON_KEYS = Object.keys(ICON_MAP);
+
 const defaultHabits: Habit[] = [
-  { id: 1, name: 'Drink 8 glasses of water', emoji: '💧', color: '#06b6d4', streak: 12, best: 18, completedDays: [true, true, true, true, true, false, false] },
-  { id: 2, name: 'Morning run — 3km', emoji: '🏃', color: '#22c55e', streak: 5, best: 14, completedDays: [true, false, true, false, true, false, false] },
-  { id: 3, name: 'Read 20 pages', emoji: '📖', color: '#f59e0b', streak: 8, best: 21, completedDays: [true, true, true, true, false, false, false] },
-  { id: 4, name: 'Meditate 10 min', emoji: '🧘', color: '#8b5cf6', streak: 3, best: 10, completedDays: [false, true, false, true, true, false, false] },
-  { id: 5, name: 'No sugar after 8pm', emoji: '🥗', color: '#ec4899', streak: 7, best: 15, completedDays: [true, true, true, true, true, true, false] },
+  { id: 1, name: 'Drink 8 glasses of water', icon: 'droplet', color: '#06b6d4', streak: 12, best: 18, completedDays: [true, true, true, true, true, false, false] },
+  { id: 2, name: 'Morning run — 3km', icon: 'run', color: '#22c55e', streak: 5, best: 14, completedDays: [true, false, true, false, true, false, false] },
+  { id: 3, name: 'Read 20 pages', icon: 'book', color: '#f59e0b', streak: 8, best: 21, completedDays: [true, true, true, true, false, false, false] },
+  { id: 4, name: 'Meditate 10 min', icon: 'brain', color: '#8b5cf6', streak: 3, best: 10, completedDays: [false, true, false, true, true, false, false] },
+  { id: 5, name: 'No sugar after 8pm', icon: 'salad', color: '#ec4899', streak: 7, best: 15, completedDays: [true, true, true, true, true, true, false] },
 ];
 
 type Page = 'today' | 'progress' | 'settings';
@@ -28,7 +47,9 @@ const Ic = {
   home: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>,
   chart: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
   gear: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>,
-  fire: <svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><path d="M12 23c-3.6 0-7-2.4-7-7 0-3.2 2.1-5.7 3.4-7.1L12 5l3.6 3.9C16.9 10.3 19 12.8 19 16c0 4.6-3.4 7-7 7z"/></svg>,
+  fire: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>,
+  target: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+  percent: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>,
 };
 
 export default function App() {
@@ -36,7 +57,7 @@ export default function App() {
   const [habits, setHabits] = useState<Habit[]>(defaultHabits);
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newEmoji, setNewEmoji] = useState('💧');
+  const [newIcon, setNewIcon] = useState('droplet');
   const [newColor, setNewColor] = useState(COLORS[0]);
   const [settings, setSettings] = useState({ notifications: true, darkMode: true, weekStart: true, sounds: false });
 
@@ -52,11 +73,11 @@ export default function App() {
   const addHabit = useCallback(() => {
     if (!newName.trim()) return;
     setHabits(prev => [...prev, {
-      id: Date.now(), name: newName.trim(), emoji: newEmoji, color: newColor,
+      id: Date.now(), name: newName.trim(), icon: newIcon, color: newColor,
       streak: 0, best: 0, completedDays: Array(7).fill(false),
     }]);
     setNewName(''); setShowAdd(false);
-  }, [newName, newEmoji, newColor]);
+  }, [newName, newIcon, newColor]);
 
   const completed = useMemo(() => habits.filter(h => h.completedDays[todayIdx]).length, [habits]);
   const totalStreak = useMemo(() => habits.reduce((a, h) => a + h.streak, 0), [habits]);
@@ -84,14 +105,17 @@ export default function App() {
 
           <div className="stats-row">
             <div className="stat-card">
+              <div className="stat-icon" style={{ color: '#6366f1' }}>{Ic.target}</div>
               <div className="stat-num" style={{ color: '#6366f1' }}>{completed}/{habits.length}</div>
               <div className="stat-label">Today</div>
             </div>
             <div className="stat-card">
-              <div className="stat-num" style={{ color: '#f59e0b' }}>🔥 {totalStreak}</div>
+              <div className="stat-icon" style={{ color: '#f59e0b' }}>{Ic.fire}</div>
+              <div className="stat-num" style={{ color: '#f59e0b' }}>{totalStreak}</div>
               <div className="stat-label">Total Streak</div>
             </div>
             <div className="stat-card">
+              <div className="stat-icon" style={{ color: '#22c55e' }}>{Ic.percent}</div>
               <div className="stat-num" style={{ color: '#22c55e' }}>{completionPct}%</div>
               <div className="stat-label">Completion</div>
             </div>
@@ -106,11 +130,11 @@ export default function App() {
             {habits.map(h => (
               <div key={h.id} className="habit-card">
                 <div className="habit-top">
-                  <span className="habit-emoji">{h.emoji}</span>
+                  <div className="habit-icon" style={{ color: h.color, background: `${h.color}15` }}>{ICON_MAP[h.icon]}</div>
                   <div className="habit-info">
                     <div className="habit-name">{h.name}</div>
                     <div className="habit-meta">
-                      <span className="habit-streak" style={{ color: '#f59e0b' }}>🔥 {h.streak} days</span>
+                      <span className="habit-streak" style={{ color: '#f59e0b' }}>{Ic.fire} {h.streak} days</span>
                       <span>Best: {h.best}</span>
                     </div>
                   </div>
@@ -174,7 +198,7 @@ export default function App() {
               return (
                 <div key={h.id} style={{ marginBottom: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.72rem', marginBottom: 4 }}>
-                    <span>{h.emoji} {h.name}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: h.color }}>{ICON_MAP[h.icon]}</span> {h.name}</span>
                     <span style={{ color: h.color, fontWeight: 600 }}>{pct}%</span>
                   </div>
                   <div style={{ height: 6, background: 'var(--bg-3)', borderRadius: 3, overflow: 'hidden' }}>
@@ -236,8 +260,8 @@ export default function App() {
             <div className="modal-field">
               <label>Icon</label>
               <div className="emoji-picker">
-                {EMOJIS.map(e => (
-                  <button key={e} className={`emoji-opt ${newEmoji === e ? 'selected' : ''}`} onClick={() => setNewEmoji(e)}>{e}</button>
+                {ICON_KEYS.map(k => (
+                  <button key={k} className={`emoji-opt ${newIcon === k ? 'selected' : ''}`} onClick={() => setNewIcon(k)}>{ICON_MAP[k]}</button>
                 ))}
               </div>
             </div>

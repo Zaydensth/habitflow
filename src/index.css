@@ -24,6 +24,7 @@ button{cursor:pointer;font-family:inherit}
 .stats-row{display:flex;gap:8px;padding:0 20px;margin-bottom:16px}
 .stat-card{flex:1;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 12px;text-align:center;transition:var(--tr)}
 .stat-card:hover{border-color:var(--border-h)}
+.stat-icon{display:flex;align-items:center;justify-content:center;margin-bottom:6px}
 .stat-num{font-size:1.3rem;font-weight:800}
 .stat-label{font-size:.6rem;color:var(--text-3);margin-top:2px}
 
@@ -38,7 +39,7 @@ button{cursor:pointer;font-family:inherit}
 @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .habit-card:hover{border-color:var(--border-h)}
 .habit-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.habit-emoji{font-size:24px}
+.habit-icon{width:40px;height:40px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .habit-info{flex:1}
 .habit-name{font-size:.82rem;font-weight:600}
 .habit-meta{font-size:.62rem;color:var(--text-3);display:flex;gap:8px;margin-top:2px}
